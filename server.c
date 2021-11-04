@@ -30,6 +30,7 @@ struct client{
     struct events clientsEvents;
 }clients[10];
 
+// Funciones Server
 void funcExit();
 void funcAdd(char *buffer);
 void funcRemove(char *buffer);
@@ -38,12 +39,12 @@ void funcList();
 void funcAll();
 void funcSaveFile(char *buffer);
 void funcLoadFile(char *buffer);
-
+// Funciones Cliente
 void funcSub(char *buffer);
 void unSub(char *buffer);
 void funcAsk();
-void funcSaveCFile();
-void funcLoadCFile();
+void funcSaveCFile(char *buffer);
+void funcLoadCFile(char *buffer);
 
 void funcComunication(int var);
 /*
@@ -120,8 +121,77 @@ void funcComunication(int sockfd)
 		// Imprime el mensaje
 		printf("[CLIENT]: %s", buffer);
 
+		char *token = strtok(buffer," ");
+        char *action = NULL;
+        char *resp;
+        for (int i = 0; token!= NULL; i++)
+        {
+            if (i == 0)
+            {
+                action = token;
+            }else if (i == 1)
+            {
+                resp = token;
+            }
+            token = strtok(NULL," ");
+        }
+		// Server
+        int exit = strcmp(action,"exit\n");
+        int add = strcmp(action,"add");
+        int remove = strcmp(action,"remove");
+        int trigger = strcmp(action,"trigger");
+        int list = strcmp(action,"list\n");
+		int all = strcmp(action,"all\n");
+		int save = strcmp(action,"save");
+		int load = strcmp(action,"load");
+		// Cliente
+		int sub = strcmp(action,"sub");
+		int unsub = strcmp(action,"unsub");
+		int list = strcmp(action,"list\n");
+		int ask = strcmp(action,"ask\n");
+		int saveC = strcmp(action,"savec");
+		int loadC = strcmp(action,"loadc");
 
-
+        if (exit == 0)
+        {
+            funcExit();
+        }else if (add == 0)
+        {
+            funcAdd(resp);
+        }else if (remove == 0)
+        {
+            funcRemove(resp);
+        }else if (trigger == 0)
+        {
+            funcTrigger(resp);
+        }else if (list == 0)
+        {
+            funcList();
+        }else if(all == 0){
+			funcAll();
+		}else if(save == 0){
+			funcSaveFile(resp);
+		}else if(load == 0){
+			funcLoadFile(resp);
+		}else if (sub == 0)
+		{
+			funcSub(resp);
+		}else if (unsub == 0)
+		{
+			funcUnsub(resp);
+		}else if (list == 0)
+		{
+			funcListC();
+		}else if (ask == 0)
+		{
+			funcAsk();
+		}else if (saveC == 00)
+		{
+			funcSaveCFile(resp);
+		}else if (loadC == 0)
+		{
+			funcLoadCFile(resp);
+		}
         printf("[SERVER]: %s");
 		bzero(buffer, MAX);
 		n = 0;
@@ -132,7 +202,6 @@ void funcComunication(int sockfd)
 		// if msg contains "Exit" then server exit and chat ended.
 		if (strncmp("exit", buffer, 4) == 0) {
 			printf("[-]Server Exit...\n");
-			exit(0);
 			break;
 		}
 	}
@@ -254,7 +323,7 @@ void funcSaveFile(char *resp){
 	{
 		perror("Error con el archivo\n");
 	}
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < sizeof(fp); i++)
 	{
 		fprintf(fp,clients[i].clientsEvents.event_name);
 	}
@@ -285,4 +354,79 @@ void funcLoadFile(char *resp){
 	fclose(fp);
 }
 // Funciones Cliente
-
+void funcSub(char *resp){
+    for (int i = 0; i < 10; i++)
+    {
+        if (strcmp(clients[i].clientsEvents.event_name,"") == 0)
+        {
+            strcpy(clients[i].clientsEvents.event_name, resp);
+            printf("Agrega %d: %s",i,clients[i].clientsEvents.event_name);
+            break;
+        }
+        //funcResponse();
+    }
+}
+void funcUnsub(char *resp){
+    for (int i = 0; i < 10; i++)
+    {
+        if (strcmp(clients[i].clientsEvents.event_name, resp) == 0)
+        {
+            strcpy(clients[i].clientsEvents.event_name,"");
+            printf("se elimino el evento \n" );
+            break;
+        }
+        //funcResponse();
+    }
+}
+void funcListC(){
+    for (int i = 0; i < 10; i++)
+    {
+        printf("Eventos Cliente %d: %s\n",i,clients[i].clientsEvents.event_name);
+        //funcResponse();
+    }
+}
+void funcAsk(){
+    for (int i = 0; i < 10; i++)
+    {
+        printf("Eventos %d: %s\n",i,clients[i].clientsEvents.event_name);
+        //funcResponse();
+    }
+}
+void funcSaveCFile(char *resp){
+	printf("Prueba \n");
+	FILE *fp;
+	fp = fopen(resp,"r+");
+	if (fp = NULL)
+	{
+		perror("Error con el archivo\n");
+	}
+	for (int i = 0; i < sizeof(fp); i++)
+	{
+		fprintf(fp,clients[i].clientsEvents.event_name);
+	}
+	fclose(fp);
+}
+void funcLoadCFile(char *resp){
+	printf("Prueba \n");
+	FILE *fp;
+	char tmp[100];
+	fp = fopen(resp,"r+");
+	if (fp == NULL)
+	{
+		perror("Error con el archivo\n");
+	}
+	while (feof(fp)==0)
+	{
+		fgets(tmp,sizeof(tmp),fp);
+		for (int i = 0; i < 10; i++)
+		{
+        if (strcmp(clients[i].clientsEvents.event_name,"") == 0)
+			{
+				strcpy(clients[i].clientsEvents.event_name, tmp);
+				printf("Evento FILE: %d: %s",i,clients[i].clientsEvents.event_name);
+				break;
+			}
+    	}
+	}
+	fclose(fp);
+}
