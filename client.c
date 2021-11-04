@@ -1,60 +1,76 @@
 #include <stdio.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <ctype.h>
 
+#define MAX 80
 #define PORT 4444
+#define SA struct sockaddr
 
-int main(){
+void funcComunication(int var);
 
-int clientSocket, ret;
-struct sockaddr_in serverAddr;
-char buffer[1024];
-
-clientSocket=socket(AF_INET, SOCK_STREAM,0);
-if(clientSocket < 0){
-
-    printf("[-]Error en conexion.\n");
-    exit(1);
-}
-printf("[+]Cliente socket conectado.\n");
-
-memset(&serverAddr,'\0', sizeof(serverAddr));
-serverAddr.sin_family = AF_INET;
-serverAddr.sin_port=htons(PORT);
-serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-ret = connect(clientSocket,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
-if(ret < 0){
-    printf("[-]Error en conexion.\n");
-    exit(1);
-}
-printf("[+]connected to server.\n");
-
-
-//hey por aqui
-while(1){
-    printf("Client: \t");
-    scanf("%s",&buffer[0]);
-    send(clientSocket,buffer,strlen(buffer),0);
-
-    if(strcmp(buffer,":exit")==0){
-        close(clientSocket);
-        printf("[-]Desconectado del servidor.\n");
-        exit(1);
-    }
-    if(recv(clientSocket, buffer, 1024, 0) < 0){
-        printf("[-]Error Reciviendo datos.\n");
-    }else{
-        printf("Server: \t%s\n",buffer);
-    }
-
+void funcComunication(int sockfd)
+{
+	char buffer[MAX];
+	int n;
+	while(1){
+		bzero(buffer, sizeof(buffer));
+		printf("[CLIENT]: ");
+		n = 0;
+		while ((buffer[n++] = getchar()) != '\n');
+		write(sockfd, buffer, sizeof(buffer));
+		bzero(buffer, sizeof(buffer));
+		read(sockfd, buffer, sizeof(buffer));
+		printf("[SERVER] : %s", buffer);
+		if ((strncmp(buffer, "exit", 4)) == 0) {
+			printf("Client Exit...\n");
+			break;
+		}
+	}
 }
 
-return 0;
+int main()
+{
+	int sockfd, connfd;
+	struct sockaddr_in servAddr, cli;
 
+	// Creacion del Socket
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1) {
+		printf("[-]Socket creation failed...\n");
+		exit(0);
+	}
+	else
+		printf("[+]Socket successfully created..\n");
+	bzero(&servAddr, sizeof(servAddr));
+
+	// Definicion de Variables IP, PUERTO
+	memset(&servAddr,'\0',sizeof(servAddr));
+	servAddr.sin_family = AF_INET;
+    servAddr.sin_port = htons(PORT);
+	servAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	
+	// Conexion al Socket
+	if (connect(sockfd, (SA*)&servAddr, sizeof(servAddr)) != 0) {
+		printf("[-]Connection with the server failed...\n");
+		exit(0);
+	}
+	else
+		printf("[+]Connected to the server..\n");
+
+	// Función para Read / Write
+	funcComunication(sockfd);
+
+	// Se cierra el Socket
+	close(sockfd);
 }
