@@ -41,8 +41,9 @@ void funcSaveFile(char *buffer);
 void funcLoadFile(char *buffer);
 // Funciones Cliente
 void funcSub(char *buffer);
-void unSub(char *buffer);
+void funcUnsub(char *buffer);
 void funcAsk();
+void funcListC();
 void funcSaveCFile(char *buffer);
 void funcLoadCFile(char *buffer);
 
@@ -112,7 +113,6 @@ void funcComunication(int sockfd)
 {
 	char buffer[MAX];
 	int n;
-
 	while (1) {
 		
 		bzero(buffer, MAX);
@@ -147,7 +147,7 @@ void funcComunication(int sockfd)
 		// Cliente
 		int sub = strcmp(action,"sub");
 		int unsub = strcmp(action,"unsub");
-		int list = strcmp(action,"list\n");
+		int listC = strcmp(action,"list\n");
 		int ask = strcmp(action,"ask\n");
 		int saveC = strcmp(action,"savec");
 		int loadC = strcmp(action,"loadc");
@@ -179,7 +179,7 @@ void funcComunication(int sockfd)
 		}else if (unsub == 0)
 		{
 			funcUnsub(resp);
-		}else if (list == 0)
+		}else if (listC == 0)
 		{
 			funcListC();
 		}else if (ask == 0)
@@ -263,7 +263,7 @@ int main()
 		else
 			printf("[+]Server Accept the Client: %s:%d\n",inet_ntoa(cli.sin_addr),ntohs(cli.sin_port));
 		// Función para Read / Write
-		funcComunication(connfd);		
+		funcComunication(connfd);	
 	}
 	// Se cierra el Socket
 	close(sockfd);
